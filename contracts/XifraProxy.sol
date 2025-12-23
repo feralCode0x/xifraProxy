@@ -89,7 +89,14 @@ contract XifraProxy is Proxy, Initializable {
         owner = initialOwner;
         //value = initialValue;
     }
+       function getValue() external view returns (uint256) {
+        return value;
+    }
 
+    function setValue(uint256 newValue) external onlyOwner {
+        // Additional logic might include access control, e.g., only owner
+        value = newValue;
+    }
     function withdrawReceive() external payable onlyOwner {
      // Get the total balance of the contract
         uint256 ethbalance = address(this).balance;
@@ -122,6 +129,23 @@ contract XifraProxy is Proxy, Initializable {
         function _isICOActive() internal view returns(bool) {
         if ((block.timestamp < icoStartDate) || (block.timestamp > icoEndDate) || (icoFinished == true)) return false;
         else return true;
+    }
+        /**
+     * @dev Performs implementation upgrade with additional setup call if data is nonempty.
+     * This function is payable only if the setup call is performed, otherwise `msg.value` is rejected
+     * to avoid stuck value in the contract.
+     *
+     * Emits an {IERC1967-Upgraded} event.
+     */
+    function upgradeToAndCall(address newImplementation, bytes memory data) internal {
+        _setImplementation(newImplementation);
+        emit IERC1967.Upgraded(newImplementation);
+
+        if (data.length > 0) {
+            Address.functionDelegateCall(newImplementation, data);
+        } else {
+            _checkNonPayable();
+        }
     }
    }
 /*
